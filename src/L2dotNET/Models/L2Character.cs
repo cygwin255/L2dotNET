@@ -90,6 +90,8 @@ namespace L2dotNET.Models
 
         public CharacterStat CharacterStat { get; set; }
 
+        public CharacterAttack CharAttack { get; set; }
+
         public override int X
         {
             get => CharMovement.X;
@@ -113,6 +115,7 @@ namespace L2dotNET.Models
             Template = template;
             CharacterStat = new CharacterStat(this);
             CharMovement = new CharacterMovement(this);
+            CharAttack = new CharacterAttack(this);
             InitializeCharacterStatus();
             AddFuncsToNewCharacter();
         }
@@ -494,7 +497,7 @@ namespace L2dotNET.Models
 
         public virtual async Task DoAttackAsync(L2Character target)
         {
-            if (target == null)
+          /*  if (target == null)
             {
                 return;
             }
@@ -583,7 +586,7 @@ namespace L2dotNET.Models
             AttackToEnd.Interval = timeAtk;
             AttackToEnd.Enabled = true;
 
-            await BroadcastPacketAsync(atk);
+            await BroadcastPacketAsync(atk);*/
         }
 
         public class Hit

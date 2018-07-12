@@ -32,8 +32,7 @@ namespace L2dotNET.Models
 
         public virtual async Task OnActionAsync(L2Player player)
         {
-            Log.Debug("Doing Attack with player " + player.Name);
-            await player.DoAttackAsync((L2Character)this);
+            Log.Error("Cant attack L2Object");
         }
 
         public virtual async Task OnActionShiftAsync(L2Player player)
@@ -49,7 +48,6 @@ namespace L2dotNET.Models
 
         public virtual async Task SendPacketAsync(GameserverPacket pk)
         {
-            await Task.FromResult(1);
         }
 
         public virtual void OnRemObject(L2Object obj) { }
@@ -82,7 +80,7 @@ namespace L2dotNET.Models
         {
             if (!excludeYourself)
                 await SendPacketAsync(pk);
-            Log.Debug("Sending " + pk.GetType() + "To Known of " + GetKnownPlayers(false).Count);
+            Log.Info("Sending " + pk.GetType() + "To Known of " + GetKnownPlayers().Count);
             GetKnownPlayers().ForEach(async p => await p.SendPacketAsync(pk));
         }
 

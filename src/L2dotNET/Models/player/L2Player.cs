@@ -284,6 +284,7 @@ namespace L2dotNET.Models.Player
 
         public override async Task SendPacketAsync(GameserverPacket gameserverPacket)
         {
+            Log.Info($"Sending gamepacket {gameserverPacket.GetType().Name}");
             await Gameclient.SendPacketAsync(gameserverPacket);
         }
 
@@ -1107,6 +1108,7 @@ namespace L2dotNET.Models.Player
 
         public override async Task DoAttackAsync(L2Character target)
         {
+            CharAttack.DoAttack(target);
            /* if (target == null)
             {
                 await SendMessageAsync("null");

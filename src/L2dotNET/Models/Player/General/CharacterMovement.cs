@@ -55,6 +55,7 @@ namespace L2dotNET.Models.Player.General
         public int DestinationX { get; private set; }
         public int DestinationY { get; private set; }
         public int DestinationZ { get; private set; }
+        public int DestinationRadiusOffset { get; private set; }
 
         private readonly L2Character _character;
         private long _movementLastTime;
@@ -62,7 +63,7 @@ namespace L2dotNET.Models.Player.General
         private L2Character _attackTarget;
         private int _x;
         private int _y;
-
+        
         public CharacterMovement(L2Character character)
         {
             _character = character;
@@ -94,6 +95,8 @@ namespace L2dotNET.Models.Player.General
                 return;
             }
 
+            _movementLastTime = currentTime;
+
             if (_attackTarget != null) // if we have target then update destination coordinates
             {
                 DestinationX = _attackTarget.X;
@@ -102,10 +105,17 @@ namespace L2dotNET.Models.Player.General
             }
 
             float distance = (float) Utilz.Length(DestinationX - _x, DestinationY - _y);
-
+            _character.SendMessageAsync($"distance to dest is {distance}");
             // vector to destination with length = 1
             float vectorX = (DestinationX - _x) / distance;
             float vectorY = (DestinationY - _y) / distance;
+
+            if (_attackTarget != null && DestinationRadiusOffset > 0)
+            {
+                DestinationX -= (int) (vectorX * DestinationRadiusOffset);
+                DestinationY -= (int) (vectorY * DestinationRadiusOffset);
+                distance = (float) Utilz.Length(DestinationX - _x, DestinationY - _y);
+            }
 
             int dx = (int)(vectorX * _character.CharacterStat.MoveSpeed * elapsedSeconds);
             int dy = (int)(vectorY * _character.CharacterStat.MoveSpeed * elapsedSeconds);
@@ -113,7 +123,7 @@ namespace L2dotNET.Models.Player.General
 
             Heading = (int) (Math.Atan2(-vectorX, -vectorY) * 10430.378 + short.MaxValue);
 
-            if (ddistance >= distance || distance < 1)
+            if (ddistance >= distance || distance < 20 || (_attackTarget != null && _character.CharAttack.CanAttack(_attackTarget, false)))
             {
                 _x = DestinationX;
                 _y = DestinationY;
@@ -122,7 +132,6 @@ namespace L2dotNET.Models.Player.General
                 return;
             }
 
-            _movementLastTime = currentTime;
             _x += (int) (vectorX * _character.CharacterStat.MoveSpeed * elapsedSeconds);
             _y += (int) (vectorY * _character.CharacterStat.MoveSpeed * elapsedSeconds);
         }
@@ -181,7 +190,6 @@ namespace L2dotNET.Models.Player.General
             int dy = y - _y;
 
             double distance = Utilz.Length(dx, dy);
-
             long currentTime = DateTime.UtcNow.Ticks;
 
             // TODO: move to config
@@ -202,11 +210,11 @@ namespace L2dotNET.Models.Player.General
             }
 
             Z = z;
-
+            PerformMove(true);
             _movementUpdateTime = currentTime;
         }
 
-        public async Task MoveTo(int x, int y, int z)
+        public async Task MoveTo(int x, int y, int z, L2Character target = null, int radiusOffset = 0)
         {
             if (!CanMove())
             {
@@ -214,9 +222,9 @@ namespace L2dotNET.Models.Player.General
                 return;
             }
 
-            if (_character.IsAttacking())
+            if (_character.CharAttack.IsAttacking)
             {
-                _character.AbortAttack();
+                await _character.CharAttack.CancelAttack();
             }
 
             if (IsMoving)
@@ -225,12 +233,16 @@ namespace L2dotNET.Models.Player.General
                 await NotifyStopMove(false);
             }
 
+            DestinationRadiusOffset = radiusOffset;
+            _attackTarget = target;
+
             float dx = x - X;
             float dy = y - Y;
-            float dz = z - Z;
+            // float dz = z - Z;
+            double distance = DistanceTo(x, y);
 
-
-            if (dx * dx + dy * dy > 9900 * 9900)
+            // TODO: move to config. 10 is an allowable error - no movement needed if dist less then that value.
+            if (distance > 9900 || distance <= radiusOffset || distance < 10)
             {
                 _character.SendActionFailedAsync();
                 return;
@@ -245,17 +257,22 @@ namespace L2dotNET.Models.Player.General
 
             Heading = (int) (Math.Atan2(-targetVector.X, -targetVector.Y) * 10430.378 + short.MaxValue);
 
-            _movementUpdateTime = _movementLastTime = DateTime.UtcNow.Ticks;
-            _attackTarget = null;
-            IsMoving = true;
+            if (radiusOffset > 0)
+            {
+                DestinationX -= (int) (targetVector.X * radiusOffset);
+                DestinationY -= (int) (targetVector.Y * radiusOffset);
+            }
 
+            _movementUpdateTime = _movementLastTime = DateTime.UtcNow.Ticks;
+            IsMoving = true;
             await _character.BroadcastPacketAsync(new CharMoveToLocation(_character));
+            
+            //Task.Delay((int) (distance / _character.CharacterStat.MoveSpeed*1000) + 100).ContinueWith(_ => PerformMove(true));
         }
 
-        public async Task MoveToAndHit(L2Character target)
+        public async Task MoveToAndHit(L2Character target, int radiusOffset = 150)
         {
-            _attackTarget = target;
-            await MoveTo(target.X, target.Y, target.Z);
+            await MoveTo(target.X, target.Y, target.Z, target, radiusOffset);
             Task.Factory.StartNew(BroadcastDestinationChanged);
         }
 
@@ -281,26 +298,29 @@ namespace L2dotNET.Models.Player.General
 
                 // TODO: move to config
                 await Task.Delay(1000);
+                //PerformMove();
             }
         }
 
         public async Task NotifyStopMove(bool broadcast = true)
         {
-            IsMoving = false;
-
-            if (broadcast)
+            if (IsMoving && broadcast)
             {
                 await _character.BroadcastPacketAsync(new StopMove(_character));
             }
+
+            IsMoving = false;
+            _character.SendMessageAsync("[move]stopped movement!");
         }
 
         public async Task NotifyArrived()
         {
             IsMoving = false;
-
+            _character.SendMessageAsync("[move]arrived!");
             if (_attackTarget != null)
             {
-               await _character.DoAttackAsync(_attackTarget);
+                _character.SendMessageAsync("[move]starting attack!");
+                _character.CharAttack.DoAttack(_attackTarget);
                 _attackTarget = null;
             }
         }

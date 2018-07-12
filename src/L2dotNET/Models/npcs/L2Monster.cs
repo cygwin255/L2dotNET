@@ -33,14 +33,15 @@ namespace L2dotNET.Models.Npcs
         {
             if (player.Target != this)
             {
-                player.SetTargetAsync(this);
+                await player.SetTargetAsync(this);
                 return;
             }
 
-            await player.CharMovement.MoveTo(X, Y, Z);
-            await player.SendPacketAsync(new MoveToPawn(player, this, 150));
+            //await player.CharMovement.MoveTo(X, Y, Z);
+            //await player.SendPacketAsync(new MoveToPawn(player, this, 150));
 
-            await player.DoAttackAsync(this);
+            //await player.DoAttackAsync(this);
+            player.CharAttack.DoAttack(this);
         }
 
         public override async Task OnForcedAttackAsync(L2Player player)
@@ -51,11 +52,11 @@ namespace L2dotNET.Models.Npcs
                 return;
             }
 
-            await player.CharMovement.MoveTo(X, Y, Z);
+            //await player.CharMovement.MoveTo(X, Y, Z);
             
-            await player.SendPacketAsync(new MoveToPawn(player, this, (int)player.CharMovement.DistanceToSquared(X,Y)));
+            //await player.SendPacketAsync(new MoveToPawn(player, this, (int)player.CharMovement.DistanceToSquared(X,Y)));
 
-            await player.DoAttackAsync(this);
+           // await player.DoAttackAsync(this);
         }
 
         public override async Task DoDieAsync(L2Character killer)
