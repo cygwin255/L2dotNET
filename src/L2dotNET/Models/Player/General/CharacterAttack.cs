@@ -65,12 +65,12 @@ namespace L2dotNET.Models.Player.General
 
             // TODO: Move to config
             _character.SendMessageAsync($"[attack]distance to target is {(int)_character.CharMovement.DistanceTo(target)}");
-            if (_character.CharMovement.DistanceToSquared(target) > 100*100 * 1.05) // TODO : use Weapon range
+            if (_character.CharMovement.DistanceToSquared(target) > 50*50 + 10) // TODO : use Weapon range
             {
                 if (moveIfTooFar)
                 {
                     _character.SendMessageAsync("[attack]targer is too far, moving for it");
-                    _character.CharMovement.MoveToAndHit(target, 100);
+                    _character.CharMovement.MoveToAndHit(target, 50);
                 }
 
                 return false;
@@ -85,7 +85,7 @@ namespace L2dotNET.Models.Player.General
             int attackSpeed = (int) (470000 / _character.CharacterStat.PAttackSpeed); // TODO: calculate real attack speed
             bool dual = true; // is dual weapon, harcode for now
 
-            while (CanAttack() && IsAttacking)
+            while (IsAttacking && CanAttack())
             {
                 Attack attackPacket = new Attack(_character, GenerateSimpleHit(dual));
 
@@ -98,7 +98,7 @@ namespace L2dotNET.Models.Player.General
 
                 await Task.Delay(dual ? attackSpeed / 2 : attackSpeed - 5);
 
-                if (!CanAttack() || !IsAttacking)
+                if (!IsAttacking || !CanAttack())
                 {
                     break;
                 }
@@ -109,7 +109,7 @@ namespace L2dotNET.Models.Player.General
                 {
                     await Task.Delay(attackSpeed / 2 - 5);
 
-                    if (!CanAttack() || !IsAttacking)
+                    if (!IsAttacking || !CanAttack())
                     {
                         break;
                     }
