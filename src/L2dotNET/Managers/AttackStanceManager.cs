@@ -11,11 +11,11 @@ namespace L2dotNET.Managers
     {
         private const int ATTACK_STANCE_DURATION_MS = 15000;
 
-        private static Dictionary<L2Player, DateTime> _players;
+        private static Dictionary<L2Player, long> _players;
 
         public static void Initialize()
         {
-            _players = new Dictionary<L2Player, DateTime>();
+            _players = new Dictionary<L2Player, long>();
 
             Task.Factory.StartNew(CheckStance);
         }
@@ -26,11 +26,11 @@ namespace L2dotNET.Managers
             {
                 if (!_players.ContainsKey(player))
                 {
-                    _players.Add(player, DateTime.UtcNow.AddMilliseconds(ATTACK_STANCE_DURATION_MS));
+                    _players.Add(player, DateTime.UtcNow.AddMilliseconds(ATTACK_STANCE_DURATION_MS).Ticks);
                     return;
                 }
 
-                _players[player] = DateTime.UtcNow.AddMilliseconds(ATTACK_STANCE_DURATION_MS);
+                _players[player] = DateTime.UtcNow.AddMilliseconds(ATTACK_STANCE_DURATION_MS).Ticks;
             }
         }
 
@@ -39,9 +39,11 @@ namespace L2dotNET.Managers
             while (true)
             {
                 List<L2Player> expiredPlayers;
+                long currentTime = DateTime.UtcNow.Ticks;
+
                 lock (_players)
                 {
-                    expiredPlayers = _players.Where(x => x.Value < DateTime.UtcNow).Select(x => x.Key).ToList();
+                    expiredPlayers = _players.Where(x => x.Value < currentTime).Select(x => x.Key).ToList();
                     expiredPlayers.ForEach(player => _players.Remove(player));
                 }
 
