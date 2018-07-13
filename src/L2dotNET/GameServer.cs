@@ -55,7 +55,7 @@ namespace L2dotNET
 
             NpcTable.Initialize();
             Capsule.Initialize();
-            
+            AttackStanceManager.Initialize();
             BlowFishKeygen.GenerateKeys();
 
             await ServiceProvider.GetService<IAdminCommandHandler>().Initialise();

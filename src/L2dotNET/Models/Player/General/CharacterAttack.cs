@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using L2dotNET.DataContracts.Shared.Enums;
+using L2dotNET.Managers;
 using L2dotNET.Network.serverpackets;
 using L2dotNET.Utility;
 using NLog.Targets;
@@ -14,6 +15,7 @@ namespace L2dotNET.Models.Player.General
     {
         public bool IsAttacking { get; private set; }
         public bool IsCasting { get; private set; }
+        public bool IsInAttackStance { get; private set; }
 
         private readonly L2Character _character;
         private L2Character _target;
@@ -96,6 +98,9 @@ namespace L2dotNET.Models.Player.General
 
                 await _character.BroadcastPacketAsync(attackPacket);
 
+                StartAutoAttack();
+                _target.CharAttack.StartAutoAttack();
+
                 await Task.Delay(dual ? attackSpeed / 2 : attackSpeed - 5);
 
                 if (!IsAttacking || !CanAttack())
@@ -170,6 +175,29 @@ namespace L2dotNET.Models.Player.General
             }
 
             return new Hit(_target.ObjectId, damage, isMiss, isCritical, shield, false, 0);
+        }
+
+        public void StartAutoAttack()
+        {
+            if (_character is L2Player)
+            {
+                if (!IsInAttackStance)
+                {
+                    _character.SendPacketAsync(new AutoAttackStart(_character.ObjectId));
+                }
+
+                AttackStanceManager.SetAttackStance((L2Player) _character);
+                IsInAttackStance = true;
+            }
+        }
+
+        public void StopAutoAttack()
+        {
+            if (IsInAttackStance && _character is L2Player)
+            {
+                _character.SendPacketAsync(new AutoAttackStop(_character.ObjectId));
+                IsInAttackStance = false;
+            }
         }
     }
 }
