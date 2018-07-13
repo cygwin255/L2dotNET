@@ -64,7 +64,7 @@ namespace L2dotNET.LoginService.Managers
                 _flood.TryRemove(ip, out oldDate);
             }
 
-            _flood.AddOrUpdate(ip, DateTime.UtcNow.AddMilliseconds(3000), (a, b) => DateTime.UtcNow.AddMilliseconds(3000));
+            _flood.AddOrUpdate(ip, DateTime.UtcNow.AddMilliseconds(500), (a, b) => DateTime.UtcNow.AddMilliseconds(500));
 
             if (!NetworkBlock.Instance.Allowed(ip))
             {

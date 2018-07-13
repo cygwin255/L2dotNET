@@ -26,7 +26,7 @@ namespace L2dotNET.Logging.Abstraction
 
             consoleTarget.Layout = @"${date:format=HH\:mm\:ss} ${message}";
             
-            configuration.LoggingRules.Add(new LoggingRule("*", LogLevel.Info, consoleTarget));
+            configuration.LoggingRules.Add(new LoggingRule("*", LogLevel.Debug, consoleTarget));
             configuration.LoggingRules.Add(new LoggingRule("*", LogLevel.Debug, fileTarget));
 
             LogManager.Configuration = configuration;
