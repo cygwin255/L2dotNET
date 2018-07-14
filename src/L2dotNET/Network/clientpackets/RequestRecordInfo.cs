@@ -18,14 +18,16 @@ namespace L2dotNET.Network.clientpackets
         public override async Task RunImpl()
         {
             await Task.Run(() =>
-            {
-                L2Player player = _client.CurrentPlayer;
+                {
+                    // TODO: Implement RequestRecordInfo
+                    throw new NotImplementedException();
+               /* L2Player player = _client.CurrentPlayer;
 
                 player.SendPacketAsync(new UserInfo(player));
                 player.SendPacketAsync(new ExBrExtraUserInfo(player.ObjectId, player.AbnormalBitMaskEvent));
 
                 foreach (L2Object obj in player.KnownObjects.Values)
-                    player.OnAddObject(obj, null, $"Player {player.Name} recording replay with your character.");
+                    player.OnAddObject(obj, null, $"Player {player.Name} recording replay with your character.");*/
             });
         }
     }

@@ -51,23 +51,13 @@ namespace L2dotNET.Network.clientpackets
             if (diffSq > 600)
             {
                 Log.Error($"User {player.ObjectId}:{player.Account.Login}:{player.Name} coord is unsync with server");
+                // TODO: Add teleport back
             }
 
-            L2WorldRegion NewRegion = L2World.GetRegion(new Location(player.X, player.Y, player.Z));
-            if (prevReg != NewRegion)
-            {
-                player.SetRegion(NewRegion);
-                player.SetupKnowsAsync();
+            L2World.UpdateRegion(player);
 
-                //Add objects from surrounding regions into knows, this is a hack to prevent 
-                //objects from popping into view as soon as you enter a new region
-                //TODO: Proper region transition
-                player.SetupKnowsAsync(NewRegion);
-
-            }
             //Log.Info($"Current client position: X:{_x}, Y:{_y}, Z:{_z}"); //debug
             player.BroadcastUserInfoAsync();
-            player.ValidateVisibleObjects(realX, realY, true);
         }
     }
 }

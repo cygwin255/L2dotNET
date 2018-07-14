@@ -220,16 +220,12 @@ namespace L2dotNET.Models.Npcs
 
         public override async Task BroadcastUserInfoAsync()
         {
-            // TODO: Sends to all players on the server. It is not right
-            foreach (L2Player pl in L2World.GetPlayers())
-            {
-                await pl.SendPacketAsync(new NpcInfo(this));
-            }
+            await Region.BroadcastToNeighbours(BroadcastUserInfoToObjectAsync);
         }
 
-        public override async Task BroadcastUserInfoToObjectAsync(L2Object l2Object)
+        public override async Task BroadcastUserInfoToObjectAsync(L2Object obj)
         {
-            await l2Object.SendPacketAsync(new NpcInfo(this));
+            await obj.SendPacketAsync(new NpcInfo(this));
         }
 
         public override async Task OnSpawnAsync(bool notifyOthers = true)

@@ -240,49 +240,7 @@ namespace L2dotNET.Models
 
         public override async Task OnSpawnAsync(bool notifyOthers = true)
         {
-            await base.OnSpawnAsync(notifyOthers);
-            RevalidateZone(true);
-        }
-
-        public void RevalidateZone(bool force)
-        {
-            if (Region == null)
-                return;
-
-            if (force)
-                zoneValidateCounter = 4;
-            else
-            {
-                zoneValidateCounter--;
-                if (zoneValidateCounter < 0)
-                    zoneValidateCounter = 4;
-                else
-                    return;
-            }
-
-            Region.RevalidateZones(this);
-        }
-
-        public override void SetRegion(L2WorldRegion newRegion)
-        {
-            // confirm revalidation of old region's zones
-            if (Region != null)
-            {
-                if (newRegion != null)
-                    Region.RevalidateZones(this);
-                else
-                    Region.RemoveFromZones(this);
-            }
-
-            base.SetRegion(newRegion);
-        }
-
-        public void SetInsisdeZone(ZoneId zone, bool state)
-        {
-            if (state)
-                _zones[(int)zone.Id]++;
-            else
-                _zones[(int)zone.Id]--;
+            await BroadcastUserInfoAsync();
         }
 
         public virtual async Task SendMessageAsync(string p) { await Task.FromResult(1); }

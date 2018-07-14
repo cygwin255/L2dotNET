@@ -37,35 +37,33 @@ namespace L2dotNET.Network.clientpackets
 
             player.TotalRestore();
 
-            player.SendPacketAsync(new SystemMessage(SystemMessageId.WelcomeToLineage));
-
             _announcementManager.OnEnter(player);
 
             foreach (L2Item item in player.Inventory.Items.Where(item => item.IsEquipped != 0))
                 item.NotifyStats(player);
 
             // player.sendItemList(false);
-            player.SendPacketAsync(new FriendList());
-            player.SendQuestList();
+            await player.SendPacketAsync(new FriendList());
+            await player.SendQuestList();
             player.UpdateReuse();
 
-            player.SendPacketAsync(new ExStorageMaxCount(player));
+            await player.SendPacketAsync(new ExStorageMaxCount(player));
             // player.sendPacket(new ExBasicActionList());
             //  NpcTable.getInstance().spawnNpc("grandmaster_ramos", player.X, player.Y, player.Z, player.Heading);
-            player.SendActionFailedAsync();
+            await player.SendActionFailedAsync();
 
             GameTime.UpdateTimeForPlayer(player);
 
-            player.Timer();
-
-            player.SpawnMeAsync();
+            //player.Timer();
+            await player.SendPacketAsync(new UserInfo(player));
+            await player.SpawnMeAsync();
             //L2WorldRegion worldRegion = L2World.GetRegion(player.X, player.Y);
             //player.SetRegion(worldRegion);
             //player.getKnowns(500, 500, false);
+            await player.SendPacketAsync(new SystemMessage(SystemMessageId.WelcomeToLineage));
 
+            //player.SetupKnowsAsync();
 
-            player.SetupKnowsAsync();
-            player.SendPacketAsync(new UserInfo(player));
 
             foreach (Plugin plugin in PluginManager.Instance.Plugins)
                 plugin.OnLogin(player);
@@ -74,8 +72,8 @@ namespace L2dotNET.Network.clientpackets
             player.StartAi();
             player.CharStatus.StartHpMpRegeneration();
             player.ShowHtm("servnews.htm", player);
-            player.BroadcastUserInfoAsync();
-            L2World.AddPlayer(player);
+            //player.BroadcastUserInfoAsync();
+            //L2World.AddPlayer(player);
         }
     }
 }

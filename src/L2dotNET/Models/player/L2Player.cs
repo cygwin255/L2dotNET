@@ -374,9 +374,9 @@ namespace L2dotNET.Models.Player
                 FolkNpc = (L2Npc)o;
         }
 
-        public void SendQuestList()
+        public async Task SendQuestList()
         {
-            SendPacketAsync(new QuestList(this));
+            await SendPacketAsync(new QuestList(this));
         }
 
         public void AddExpSp(int exp, int sp, bool msg)
@@ -403,18 +403,18 @@ namespace L2dotNET.Models.Player
             SendPacketAsync(su);
         }
 
-        public void Timer()
+        /*public void Timer()
         {
             _timerTooFar = new Timer(30 * 1000);
             _timerTooFar.Elapsed += _timeToFarTimerTask;
             _timerTooFar.Interval = 10000;
             _timerTooFar.Enabled = true;
-        }
+        }*/
 
-        public void _timeToFarTimerTask(object sender, ElapsedEventArgs e)
+       /* public void _timeToFarTimerTask(object sender, ElapsedEventArgs e)
         {
             ValidateVisibleObjects(X, Y, true);
-        }
+        }*/
         
         public bool IsAlikeDead()
         {
@@ -530,41 +530,7 @@ namespace L2dotNET.Models.Player
 
         public override void OnAddObject(L2Object obj, GameserverPacket pk, string msg = null)
         {
-            if (obj is L2Npc)
-                SendPacketAsync(new NpcInfo((L2Npc)obj));
-            else
-            {
-                if (obj is L2Player)
-                {
-                    SendPacketAsync(new CharInfo((L2Player)obj));
-
-                    if (msg != null)
-                        ((L2Player)obj).SendMessageAsync(msg);
-                }
-                else
-                {
-                    if (obj is L2Item)
-                        SendPacketAsync(pk ?? new SpawnItem((L2Item)obj));
-                    else
-                    {
-                       
-                        {
-                            if (obj is L2Chair)
-                                SendPacketAsync(new StaticObject((L2Chair)obj));
-                            else
-                            {
-                                if (obj is L2StaticObject)
-                                    SendPacketAsync(new StaticObject((L2StaticObject)obj));
-                                else
-                                {
-                                    if (obj is L2Boat)
-                                        SendPacketAsync(new VehicleInfo((L2Boat)obj));
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+            
         }
 
         public override async Task BroadcastStatusUpdateAsync()
@@ -580,17 +546,17 @@ namespace L2dotNET.Models.Player
         public override async Task BroadcastUserInfoAsync()
         {
             await SendPacketAsync(new UserInfo(this));
-
-            //if (getPolyType() == PolyType.NPC)
-            //    Broadcast.toKnownPlayers(this, new AbstractNpcInfo.PcMorphInfo(this, getPolyTemplate()));
-            //else
-            await Task.WhenAll(L2World.GetPlayers().Where(player => player != this)
-                .Select(player => player.SendPacketAsync(new CharInfo(this))));
+            await Task.WhenAll(Region.BroadcastToNeighbours(BroadcastUserInfoToObjectAsync, ObjectId));
         }
 
         public override void AddKnownObject(L2Object obj)
         {
             SendInfoFrom(obj);
+        }
+
+        public override async Task BroadcastUserInfoToObjectAsync(L2Object obj)
+        {
+            await obj.SendPacketAsync(new CharInfo(this));
         }
 
         private void SendInfoFrom(L2Object obj)
@@ -1433,7 +1399,7 @@ namespace L2dotNET.Models.Player
                 await obj.BroadcastUserInfoToObjectAsync(this);
             }
         }
-        public async Task SetupKnowsAsync(L2WorldRegion region)
+        /*public async Task SetupKnowsAsync(L2WorldRegion region)
         {
             var regions = region.GetSurroundingRegions();
             foreach (var reg in regions)
@@ -1443,7 +1409,7 @@ namespace L2dotNET.Models.Player
                     await obj.BroadcastUserInfoToObjectAsync(this);
                 }
             }
-        }
+        }*/
 
         public bool CharDeleteTimeExpired() => DeleteTime.HasValue && DeleteTime.Value < DateTime.UtcNow;
 

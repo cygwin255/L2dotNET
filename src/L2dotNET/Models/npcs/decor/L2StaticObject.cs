@@ -31,8 +31,12 @@ namespace L2dotNET.Models.Npcs.Decor
 
         public override async Task BroadcastUserInfoAsync()
         {
-            foreach (L2Player obj in KnownObjects.Values.OfType<L2Player>())
-                await obj.SendPacketAsync(new StaticObject(this));
+            await Region.BroadcastToNeighbours(BroadcastUserInfoToObjectAsync);
+        }
+
+        public override async Task BroadcastUserInfoToObjectAsync(L2Object obj)
+        {
+            await obj.SendPacketAsync(new StaticObject(this));
         }
 
         public override async Task OnActionAsync(L2Player player)

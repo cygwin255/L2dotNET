@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using L2dotNET.DataContracts.Shared.Enums;
@@ -23,8 +24,10 @@ namespace L2dotNET.Network.clientpackets.PartyAPI
         public override async Task RunImpl()
         {
             await Task.Run(() =>
-            {
-                L2Player player = _client.CurrentPlayer;
+                {
+                    //TODO: Implement RequestJoinParty
+                    throw new NotImplementedException();
+              /*  L2Player player = _client.CurrentPlayer;
                 L2Player target = player.KnownObjects.Values.OfType<L2Player>().FirstOrDefault(obj => obj.Name.Equals(_name));
 
                 //if (name.Equals(player.Name))
@@ -102,7 +105,7 @@ namespace L2dotNET.Network.clientpackets.PartyAPI
                 }
 
                 player.SendPacketAsync(new SystemMessage(SystemMessageId.YouInvitedS1ToParty).AddPlayerName(target.Name));
-                target.PendToJoinParty(player, _itemDistribution);
+                target.PendToJoinParty(player, _itemDistribution);*/
             });
         }
     }

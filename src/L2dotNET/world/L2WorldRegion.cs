@@ -1,8 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using L2dotNET.Models;
 using L2dotNET.Models.Player;
 using L2dotNET.Models.Zones;
+using L2dotNET.Utility;
 using NLog;
 
 namespace L2dotNET.World
@@ -11,208 +15,181 @@ namespace L2dotNET.World
     {
         private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
-        private readonly Dictionary<int, L2Object> _objects = new Dictionary<int, L2Object>();
+        private readonly object _activationLock = new object();
+        private readonly LockedDictionary<int, L2Object> _objects = new LockedDictionary<int, L2Object>(3);
+        private readonly LockedDictionary<int, L2Player> _players = new LockedDictionary<int, L2Player>(3);
 
-        private readonly List<L2WorldRegion> _surroundingRegions = new List<L2WorldRegion>();
-        private readonly List<L2ZoneType> _zones = new List<L2ZoneType>();
+        //private readonly List<L2ZoneType> _zones = new List<L2ZoneType>();
 
-        private readonly int _tileX;
-        private readonly int _tileY;
+        public int X { get; }
+        public int Y { get; }
 
-        private bool _active;
-        private int _playersCount;
+        public bool IsActive { get; private set; }
+        public int ObjectsCount => _objects.Count;
+        public int PlayersCount => _players.Count;
 
         public L2WorldRegion(int x, int y)
         {
-            _tileX = x;
-            _tileY = y;
+            X = x;
+            Y = y;
         }
 
-        public string GetName()
+        public IEnumerable<L2Object> GetObjects()
         {
-            return $"WorldRegion:{_tileX}_{_tileY}";
+            return _objects.GetAll();
         }
 
-        public List<L2Object> GetObjects()
+        public IEnumerable<L2Player> GetPlayers()
         {
-            return _objects.Values.ToList();
+            return _players.GetAll();
         }
 
-        public void AddSurroundingRegion(L2WorldRegion region)
+        public int GetObjectsCount()
         {
-            _surroundingRegions.Add(region);
-        }
-
-        public List<L2WorldRegion> GetSurroundingRegions()
-        {
-            return _surroundingRegions;
-        }
-
-        public List<L2ZoneType> GetZones()
-        {
-            return _zones;
-        }
-
-        public void AddZone(L2ZoneType zone)
-        {
-            _zones.Add(zone);
-        }
-
-        public void RemoveZone(L2ZoneType zone)
-        {
-            _zones.Remove(zone);
-        }
-
-        public void RevalidateZones(L2Character character)
-        {
-            //if (character.isTeleporting())
-            //    return;
-
-            _zones.ForEach(zone => zone.RevalidateInZone(character));
-        }
-
-        public void RemoveFromZones(L2Character character)
-        {
-            _zones.ForEach(zone => zone.RemoveCharacter(character));
-        }
-
-        public bool ContainsZone(int zoneId)
-        {
-            return _zones.Any(z => z.Id == zoneId);
-        }
-
-        //     public bool checkEffectRangeInsidePeaceZone(L2Skill skill, final int x, final int y, final int z)
-        //     {
-        //         int range = skill.getEffectRange();
-        //         int up = y + range;
-        //         int down = y - range;
-        //         int left = x + range;
-        //         int right = x - range;
-
-        //         foreach (L2ZoneType e in _zones)
-        //         {
-        ////             if ((e is L2TownZone && ((L2TownZone)e).isPeaceZone()) || e instanceof L2DerbyTrackZone || e instanceof L2PeaceZone)
-        ////{
-        //             //if (e.isInsideZone(x, up, z))
-        //             //    return false;
-
-        //             //if (e.isInsideZone(x, down, z))
-        //             //    return false;
-
-        //             //if (e.isInsideZone(left, y, z))
-        //             //    return false;
-
-        //             //if (e.isInsideZone(right, y, z))
-        //             //    return false;
-
-        //             //if (e.isInsideZone(x, y, z))
-        //             //    return false;
-        //         //}
-        //     }
-        //   return true;
-        //  }
-
-        //public void onDeath(L2Character character)
-        //{
-        //    _zones.stream().filter(z->z.isCharacterInZone(character)).forEach(z->z.onDieInside(character));
-        //}
-
-        //public void onRevive(L2Character character)
-        //{
-        //    _zones.stream().filter(z->z.isCharacterInZone(character)).forEach(z->z.onReviveInside(character));
-        //}
-
-        public bool IsActive()
-        {
-            return _active;
+            return _objects.Count;
         }
 
         public int GetPlayersCount()
         {
-            return _playersCount;
+            return _players.Count;
         }
-
-        /**
-	     * Check if neighbors (including self) aren't inhabited.
-	     * @return true if the above condition is met.
-	     */
-
-        public bool IsEmptyNeighborhood()
+ 
+        public async void Activate()
         {
-            return _surroundingRegions.All(neighbor => neighbor.GetPlayersCount() == 0);
+            lock (_activationLock)
+            {
+                if (IsActive)
+                {
+                    return;
+                }
+
+                IsActive = true;
+                // TODO: Add region activation logic
+            }
         }
 
-        /**
-	     * This function turns this region's AI on or off.
-	     * @param value : if true, activate hp/mp regen and random animation. If false, clean aggro/attack list, set objects on IDLE and drop their AI tasks.
-	     */
-
-        public void SetActive(bool value)
+        public void Deactivate()
         {
-            _active = value;
+            lock (_activationLock)
+            {
+                if (!IsActive)
+                {
+                    return;
+                }
 
-            //if (!value)
-            //{
-            //    foreach (L2Object o in _objects.Values)
-            //    {
-            //        if (o is L2Attackable)
-            //        {
-            //            L2Attackable mob = (L2Attackable)o;
-
-            //            // Set target to null and cancel Attack or Cast
-            //            mob.setTarget(null);
-
-            //            // Stop movement
-            //            mob.stopMove(null);
-
-            //            // Stop all active skills effects in progress on the L2Character
-            //            mob.stopAllEffects();
-
-            //            mob.getAggroList().clear();
-            //            mob.getAttackByList().clear();
-
-            //            // stop the ai tasks
-            //            if (mob.hasAI())
-            //            {
-            //                mob.getAI().setIntention(CtrlIntention.IDLE);
-            //                mob.getAI().stopAITask();
-            //            }
-            //        }
-            //    }
-
-            //else
-            //{
-            //        for (L2Object o : _objects.values())
-            //        {
-            //            if (o instanceof L2Attackable)
-            //      ((L2Attackable)o).getStatus().startHpMpRegeneration();
-            //     else if (o instanceof L2Npc)
-            //      ((L2Npc)o).startRandomAnimationTimer();
-            //    }
-            //}
+                IsActive = false;
+                // TODO: Add region deactivation logic
+            }
         }
 
-        public void AddVisibleObject(L2Object obj)
+        public void Add(L2Object obj)
         {
             if (obj == null)
+            {
                 return;
+            }
 
-            if (!_objects.ContainsKey(obj.ObjectId))
+            if (obj is L2Player)
+            {
+                _players.Add(obj.ObjectId, (L2Player) obj);
+
+                foreach (L2WorldRegion region in GetClosestNeighbours().Where(x => !x.IsActive))
+                {
+                    region.Activate();
+                }
+            }
+            else
+            {
                 _objects.Add(obj.ObjectId, obj);
-
-            if (obj is L2Player)
-                _playersCount += 1;
+            }
         }
 
-        public void RemoveVisibleObject(L2Object obj)
+        public void Remove(L2Object obj)
         {
             if (obj == null)
+            {
                 return;
-
-            _objects.Remove(obj.ObjectId);
+            }
 
             if (obj is L2Player)
-                _playersCount -= 1;
+            {
+                _players.Remove(obj.ObjectId);
+            }
+            else
+            {
+                _objects.Remove(obj.ObjectId);
+            }
+        }
+
+        public IEnumerable<L2Object> GetAllNeighbourObjects()
+        {
+            return GetNeighbours().SelectMany(x => x.GetObjects());
+        }
+
+        public IEnumerable<L2Player> GetAllNeighbourPlayers(int? exclude = null)
+        {
+            IEnumerable<L2Player> players = GetNeighbours().Where(x => x != null).SelectMany(x => x.GetPlayers());
+
+            if (exclude.HasValue)
+            {
+                return players.Where(x => x.ObjectId != exclude.Value);
+            }
+
+            return players;
+        }
+
+        public async Task BroadcastToNeighbours(Func<L2Player, Task> asyncAction, int? exclude = null)
+        {
+            await Task.WhenAll(GetAllNeighbourPlayers(exclude).Select(asyncAction));
+        }
+
+        public IEnumerable<L2WorldRegion> GetNeighbours()
+        {
+            return GetNeighboursEnumerable().Union(GetFarNeighboursEnumerable()).Where(x => x != null);
+        }
+
+        public IEnumerable<L2WorldRegion> GetClosestNeighbours()
+        {
+            return GetNeighboursEnumerable().Where(x => x != null);
+        }
+
+        private IEnumerable<L2WorldRegion> GetNeighboursEnumerable()
+        {
+            yield return this;
+
+            yield return L2World.GetRegionByIndexes(X + 1, Y);
+            yield return L2World.GetRegionByIndexes(X - 1, Y);
+            yield return L2World.GetRegionByIndexes(X, Y + 1);
+            yield return L2World.GetRegionByIndexes(X, Y - 1);
+
+            yield return L2World.GetRegionByIndexes(X + 1, Y + 1);
+            yield return L2World.GetRegionByIndexes(X - 1, Y + 1);
+            yield return L2World.GetRegionByIndexes(X + 1, Y - 1);
+            yield return L2World.GetRegionByIndexes(X - 1, Y - 1);
+        }
+
+        private IEnumerable<L2WorldRegion> GetFarNeighboursEnumerable()
+        {
+            yield return L2World.GetRegionByIndexes(X+2, Y);
+            yield return L2World.GetRegionByIndexes(X+2, Y+1);
+            yield return L2World.GetRegionByIndexes(X+2, Y-1);
+            //yield return L2World.GetRegionByIndexes(_tileX+2, _tileY+2);
+            //yield return L2World.GetRegionByIndexes(_tileX+2, _tileY-2);
+
+            yield return L2World.GetRegionByIndexes(X - 2, Y);
+            yield return L2World.GetRegionByIndexes(X - 2, Y + 1);
+            yield return L2World.GetRegionByIndexes(X - 2, Y - 1);
+            //yield return L2World.GetRegionByIndexes(_tileX - 2, _tileY + 2);
+            //yield return L2World.GetRegionByIndexes(_tileX - 2, _tileY - 2);
+
+            yield return L2World.GetRegionByIndexes(X, Y+2);
+            yield return L2World.GetRegionByIndexes(X+1, Y+2);
+            yield return L2World.GetRegionByIndexes(X-1, Y+2);
+
+            yield return L2World.GetRegionByIndexes(X, Y-2);
+            yield return L2World.GetRegionByIndexes(X+1, Y-2);
+            yield return L2World.GetRegionByIndexes(X-1, Y-2);
+
         }
     }
 }

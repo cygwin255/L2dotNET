@@ -36,7 +36,7 @@ namespace L2dotNET.Network.clientpackets.VehicleAPI
         {
             await Task.Run(() =>
             {
-                L2Player player = _client.CurrentPlayer;
+               /* L2Player player = _client.CurrentPlayer;
 
                 //You do not possess the correct ticket to board the boat.
             
@@ -70,7 +70,7 @@ namespace L2dotNET.Network.clientpackets.VehicleAPI
                 player.BoatX = _dx;
                 player.BoatY = _dy;
                 player.BoatZ = _dz;
-                player.BroadcastPacketAsync(new MoveToLocationInVehicle(player, _x, _y, _z));
+                player.BroadcastPacketAsync(new MoveToLocationInVehicle(player, _x, _y, _z));*/
             });
         }
     }

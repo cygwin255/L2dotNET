@@ -15,8 +15,12 @@ namespace L2dotNET.Models.Vehicles
 
         public override async Task BroadcastUserInfoAsync()
         {
-            foreach (L2Player obj in KnownObjects.Values.OfType<L2Player>())
-                await obj.SendPacketAsync(new VehicleInfo(this));
+            await Region.BroadcastToNeighbours(BroadcastUserInfoToObjectAsync);
+        }
+
+        public override async Task BroadcastUserInfoToObjectAsync(L2Object obj)
+        {
+            await obj.SendPacketAsync(new VehicleInfo(this));
         }
     }
 }

@@ -3,7 +3,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Timers;
 using L2dotNET.DataContracts.Shared.Enums;
+using L2dotNET.Models.Items;
+using L2dotNET.Models.Npcs;
+using L2dotNET.Models.Npcs.Decor;
 using L2dotNET.Models.Player;
+using L2dotNET.Models.Vehicles;
 using L2dotNET.Models.Zones;
 using L2dotNET.Models.Zones.Classes;
 using L2dotNET.Network;
@@ -17,7 +21,7 @@ namespace L2dotNET.Models
     {
         private static readonly Logger Log = LogManager.GetCurrentClassLogger();
         public int ObjectId;
-        public SortedList<int, L2Object> KnownObjects = new SortedList<int, L2Object>();
+        //public SortedList<int, L2Object> KnownObjects = new SortedList<int, L2Object>();
         public virtual byte Level { get; set; } = 1;
         public virtual bool Dead { get; set; } = false;
         public virtual int X { get; set; }
@@ -76,29 +80,19 @@ namespace L2dotNET.Models
             await Task.FromResult(1);
         }
 
-        public virtual async Task BroadcastPacketAsync(GameserverPacket pk, bool excludeYourself)
+        public virtual async Task BroadcastPacketAsync(GameserverPacket pk, bool excludeYourself = false)
         {
-            if (!excludeYourself)
-                await SendPacketAsync(pk);
-            Log.Info("Sending " + pk.GetType() + "To Known of " + GetKnownPlayers().Count);
-            GetKnownPlayers().ForEach(async p => await p.SendPacketAsync(pk));
-        }
-
-        public virtual async Task BroadcastPacketAsync(GameserverPacket pk)
-        {
-            await BroadcastPacketAsync(pk, false);
+            await Region.BroadcastToNeighbours(p => p.SendPacketAsync(pk), excludeYourself ? (int?)ObjectId : null);
         }
 
         //public virtual void ReduceHp(L2Character attacker, double damage) { }
 
         public virtual void DecayMe()
         {
-            Region = null;
-
             L2World.RemoveObject(this);
         }
 
-        public async Task ClearKnownsAsync(bool deleteMe, params int[] exclude)
+       /* public async Task ClearKnownsAsync(bool deleteMe, params int[] exclude)
         {
             foreach (L2Object o in KnownObjects.Values)
             {
@@ -109,40 +103,15 @@ namespace L2dotNET.Models
             }
 
             KnownObjects.Clear();
-        }
+        }*/
 
-        public void GetKnowns(int range, int height, bool zones)
-        {
-            L2World.GetObjects(); // GetKnowns(this, range, height, zones);
-        }
-
-        public virtual List<L2Player> GetKnownPlayers(bool excludeSelf = true)
-        {
-            L2WorldRegion region = Region;
-            if (region == null)
-                return new List<L2Player>();
-
-            List<L2Player> result = new List<L2Player>();
-            if(excludeSelf)
-            { 
-                region.GetSurroundingRegions().ForEach(reg => result.AddRange(L2World.GetPlayers().Where(obj => obj != this)));
-            }
-            else
-            {
-                region.GetSurroundingRegions().ForEach(reg => result.AddRange(L2World.GetPlayers()));
-            }
-            return result;
-        }
-
-
-
-        public virtual void SetRegion(L2WorldRegion newRegion)
+        /*public virtual void SetRegion(L2WorldRegion newRegion)
         {
             List<L2WorldRegion> oldAreas = new List<L2WorldRegion>();
 
             if (Region != null)
             {
-                Region.RemoveVisibleObject(this);
+                Region.Remove(this);
                 oldAreas = Region.GetSurroundingRegions();
             }
 
@@ -150,7 +119,7 @@ namespace L2dotNET.Models
 
             if (newRegion != null)
             {
-                newRegion.AddVisibleObject(this);
+                newRegion.Add(this);
                 newAreas = newRegion.GetSurroundingRegions();
             }
 
@@ -181,31 +150,31 @@ namespace L2dotNET.Models
             }
 
             Region = newRegion;
-        }
+        }*/
 
-        private async Task OnClearingAsync(L2Object target, bool deleteMe)
+        /*private async Task OnClearingAsync(L2Object target, bool deleteMe)
         {
             lock (KnownObjects)
                 KnownObjects.Remove(target.ObjectId);
 
             if (deleteMe && target is L2Player)
                 await target.SendPacketAsync(new DeleteObject(ObjectId));
-        }
+        }*/
 
         public async Task SetVisible(bool val)
         {
             Visible = val;
-            foreach (L2Object o in KnownObjects.Values)
-                await o.CanViewAsync(this);
+          //  foreach (L2Object o in KnownObjects.Values)
+          //      await o.CanViewAsync(this);
         }
 
-        private async Task CanViewAsync(L2Object target)
+        /*private async Task CanViewAsync(L2Object target)
         {
             foreach (L2Object o in KnownObjects.Values)
                 await o.OnClearingAsync(this, true);
-        }
+        }*/
 
-        public void AddKnownObject(L2Object obj, GameserverPacket pk, bool pkuse)
+        /*public void AddKnownObject(L2Object obj, GameserverPacket pk, bool pkuse)
         {
             if (KnownObjects.ContainsKey(obj.ObjectId))
                 return;
@@ -217,15 +186,15 @@ namespace L2dotNET.Models
 
             if (pkuse)
                 OnAddObject(obj, pk);
-        }
+        }*/
 
-        public void UpdateVisibleStatus()
+        /*public void UpdateVisibleStatus()
         {
             foreach (L2Object o in KnownObjects.Values.Where(o => o.Visible))
                 OnAddObject(o, null);
-        }
+        }*/
 
-        public void RemoveKnownObject(L2Object obj, bool update)
+        /*public void RemoveKnownObject(L2Object obj, bool update)
         {
             if (!KnownObjects.ContainsKey(obj.ObjectId))
                 return;
@@ -234,9 +203,9 @@ namespace L2dotNET.Models
 
             lock (KnownObjects)
                 KnownObjects.Remove(obj.ObjectId);
-        }
+        }*/
 
-        public void Revalidate(L2Object obj)
+       /* public void Revalidate(L2Object obj)
         {
             if (KnownObjects.ContainsKey(obj.ObjectId))
                 return;
@@ -245,7 +214,7 @@ namespace L2dotNET.Models
 
             if (obj.Visible)
                 OnAddObject(obj, null);
-        }
+        }*/
 
         public bool IsInsideRadius(L2Object o, int radius, bool checkZ, bool strictCheck)
         {
@@ -266,13 +235,17 @@ namespace L2dotNET.Models
             if (strictCheck)
             {
                 if (checkZ)
+                {
                     return ((dx * dx) + (dy * dy) + (dz * dz)) < (radius * radius);
+                }
 
                 return ((dx * dx) + (dy * dy)) < (radius * radius);
             }
 
             if (checkZ)
+            {
                 return ((dx * dx) + (dy * dy) + (dz * dz)) <= (radius * radius);
+            }
 
             return ((dx * dx) + (dy * dy)) <= (radius * radius);
         }
@@ -322,12 +295,18 @@ namespace L2dotNET.Models
 
             int code;
             if (_isInsidePvpZone)
+            {
                 code = ExSetCompassZoneCode.Pvpzone;
+            }
             else
+            {
                 code = _isInsidePeaceZone ? ExSetCompassZoneCode.Peacezone : ExSetCompassZoneCode.Generalzone;
+            }
 
             if (code == 0)
+            {
                 return;
+            }
 
             if ((LastCode != -1) && (LastCode != code))
             {
@@ -344,10 +323,14 @@ namespace L2dotNET.Models
         public async Task OnEnterZoneAsync(L2Zone z)
         {
             if (ActiveZones.ContainsKey(z.ZoneId))
+            {
                 return;
+            }
 
             if (this is L2Player)
+            {
                 await ((L2Player)this).SendMessageAsync($"entered zone {z.Name}");
+            }
 
             ActiveZones.Add(z.ZoneId, z);
             z.OnEnter(this);
@@ -359,7 +342,9 @@ namespace L2dotNET.Models
         public async Task OnExitZoneAsync(L2Zone z, bool cls)
         {
             if (!ActiveZones.ContainsKey(z.ZoneId))
+            {
                 return;
+            }
 
             lock (ActiveZones)
                 ActiveZones.Remove(z.ZoneId);
@@ -373,15 +358,21 @@ namespace L2dotNET.Models
         private async Task RevalidateZoneAsync(L2Zone z)
         {
             if (z is PeaceZoneBuff)
+            {
                 await ValidatePeaceZonesAsync();
+            }
             else
             {
                 if (z is BattleZone)
+                {
                     await ValidateBattleZonesAsync();
+                }
                 else
                 {
                     if (z is WaterZone)
+                    {
                         await ValidateWaterZones();
+                    }
                 }
             }
         }
@@ -417,20 +408,28 @@ namespace L2dotNET.Models
             }
 
             if (!found)
+            {
                 _isInsidePeaceZone = false;
+            }
 
             if (!old && _isInsidePeaceZone)
             {
                 if (this is L2Player)
+                {
                     await ((L2Player)this).SendSystemMessage(SystemMessageId.EnterPeacefulZone);
+                }
             }
             else
             {
                 if (!old || _isInsidePeaceZone)
+                {
                     return;
+                }
 
                 if (this is L2Player)
+                {
                     await ((L2Player)this).SendSystemMessage(SystemMessageId.ExitPeacefulZone);
+                }
             }
         }
 
@@ -454,29 +453,35 @@ namespace L2dotNET.Models
             }
 
             if (!found)
+            {
                 _isInsidePvpZone = false;
+            }
 
             if (!old && _isInsidePvpZone)
             {
                 if (this is L2Player)
+                {
                     await ((L2Player)this).SendSystemMessage(SystemMessageId.EnteredCombatZone);
+                }
             }
             else
             {
                 if (!old || _isInsidePvpZone)
+                {
                     return;
+                }
 
                 if (this is L2Player)
+                {
                     await ((L2Player)this).SendSystemMessage(SystemMessageId.LeftCombatZone);
+                }
             }
         }
 
         public virtual async Task SpawnMeAsync(bool notifyOthers = true)
         {
-            Region = L2World.GetRegion(new Location(X, Y, Z));
-
             L2World.AddObject(this);
-            await OnSpawnAsync(notifyOthers);
+            await OnSpawnAsync();
         }
 
         public async Task ValidateWaterZones()
@@ -497,10 +502,12 @@ namespace L2dotNET.Models
             _isInsideWaterZone = (Z > -4779) && (Z < -3779);
 
             if (this is L2Player)
+            {
                 await ((L2Player)this).WaterTimer();
+            }
         }
 
-        public void ValidateVisibleObjects(int x, int y, bool zones)
+       /* public void ValidateVisibleObjects(int x, int y, bool zones)
         {
             //int range = 4000;
             //int height = 1600;
@@ -512,7 +519,7 @@ namespace L2dotNET.Models
             }
 
             //L2World.CheckToUpdate(this, x, y, range, height, true, zones);
-        }
+        }*/
 
         public Timer RegenerationMethod_1S,
                      RegenUpdate;
@@ -549,10 +556,14 @@ namespace L2dotNET.Models
         public void StopRegeneration()
         {
             if (RegenerationMethod_1S != null)
+            {
                 RegenerationMethod_1S.Enabled = false;
+            }
 
             if (RegenUpdate != null)
+            {
                 RegenUpdate.Enabled = false;
+            }
         }
 
         public virtual double Radius => 11;
@@ -564,9 +575,15 @@ namespace L2dotNET.Models
             return $"L2Object: {ObjectId}";
         }
 
-        public virtual async Task BroadcastUserInfoToObjectAsync(L2Object l2Object)
+        public virtual async Task BroadcastUserInfoToObjectAsync(L2Object obj)
         {
-            await Task.FromResult(1);
+            /*
+             else if (obj is L2Item)
+            {
+                // TODO: Fix that
+                //await SendPacketAsync(pk ?? new SpawnItem((L2Item) obj));
+            }
+             */
         }
     }
 }

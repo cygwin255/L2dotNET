@@ -103,7 +103,7 @@ namespace L2dotNET.Models.Items
 
             Location = ItemLocation.Void;
 
-            killer?.AddKnownObject(this, pk, true);
+            //killer?.AddKnownObject(this, pk, true);
 
             L2World.AddObject(this);
         }
@@ -119,17 +119,17 @@ namespace L2dotNET.Models.Items
             await player.SendMessageAsync($"{AsString()} dis {(int)dis}");
             if (dis < 80)
             {
-                foreach (L2Player o in KnownObjects.Values.OfType<L2Player>())
+                foreach (L2Player p in Region.GetAllNeighbourPlayers())
                 {
-                    await o.SendPacketAsync(new GetItem(player.ObjectId, ObjectId, X, Y, Z));
-                    await o.SendPacketAsync(new DeleteObject(ObjectId));
+                    p.SendPacketAsync(new GetItem(p.ObjectId, ObjectId, X, Y, Z));
+                    p.SendPacketAsync(new DeleteObject(ObjectId));
                 }
 
                 player.OnPickUp(this);
 
                 L2World.RemoveObject(this);
             }
-            else
+            else // TODO: Rework this
                 await player.CharMovement.MoveTo(X, Y, Z);
         }
 

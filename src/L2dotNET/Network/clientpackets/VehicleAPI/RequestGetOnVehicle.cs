@@ -27,7 +27,7 @@ namespace L2dotNET.Network.clientpackets.VehicleAPI
         {
             await Task.Run(() =>
             {
-                L2Player player = _client.CurrentPlayer;
+               /* L2Player player = _client.CurrentPlayer;
 
                 if (player.Boat != null)
                 {
@@ -42,7 +42,7 @@ namespace L2dotNET.Network.clientpackets.VehicleAPI
                 if (player.KnownObjects.ContainsKey(_boatId))
                     player.Boat = (L2Boat)player.KnownObjects[_boatId];
 
-                player.BroadcastPacketAsync(new GetOnVehicle(player));
+                player.BroadcastPacketAsync(new GetOnVehicle(player));*/
             });
         }
     }

@@ -1,4 +1,6 @@
-﻿using L2dotNET.Templates;
+﻿using System.Threading.Tasks;
+using L2dotNET.Network.serverpackets;
+using L2dotNET.Templates;
 
 namespace L2dotNET.Models.Npcs.Decor
 {

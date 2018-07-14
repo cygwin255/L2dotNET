@@ -96,8 +96,7 @@ namespace L2dotNET.Models.Npcs
 
         public override async Task BroadcastUserInfoAsync()
         {
-            foreach (L2Player obj in KnownObjects.Values.OfType<L2Player>())
-                await obj.SendPacketAsync(new NpcInfo(this));
+            await Region.BroadcastToNeighbours(p => p.SendPacketAsync(new NpcInfo(this)));
         }
 
         public override async Task DoDieAsync(L2Character killer)

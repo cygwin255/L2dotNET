@@ -42,9 +42,9 @@ namespace L2dotNET.Network.clientpackets
                         break;
                     case 52: // /unstuck
 
-                        L2WorldRegion worldRegion = L2World.GetRegion(player.X, player.Y);
-                        player.SetRegion(worldRegion);
-                        List<L2Player> knowns = player.GetKnownPlayers();
+                       // L2WorldRegion worldRegion = L2World.GetRegion(player.X, player.Y);
+                       // player.SetRegion(worldRegion);
+                        //List<L2Player> knowns = player.GetKnownPlayers();
                         //player.SpawnMeAsync();
                         player.SendMessageAsync("Unstuck not implemented yet.");
                         //player.knownObjects;
