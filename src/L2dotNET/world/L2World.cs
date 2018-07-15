@@ -245,5 +245,11 @@ namespace L2dotNET.World
                 await Task.Delay(60 * 1000); // TODO: Move to config
             }
         }
+
+        public static async Task KickPlayer(L2Player player)
+        {
+            await player.SendMessageAsync("You have been kicked.");
+            await player.Gameclient.Disconnect();
+        }
     }
 }

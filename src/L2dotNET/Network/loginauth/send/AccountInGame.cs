@@ -2,19 +2,19 @@
 {
     class AccountInGame : GameserverPacket
     {
-        private readonly string _account;
+        private readonly int _accountId;
         private readonly bool _status;
 
-        public AccountInGame(string account, bool status)
+        public AccountInGame(int accountId, bool status)
         {
-            _account = account;
+            _accountId = accountId;
             _status = status;
         }
 
         public override void Write()
         {
-            WriteByte(0x03);
-            WriteString(_account.ToLower());
+            WriteByte(0xA2);
+            WriteInt(_accountId);
             WriteByte(_status ? (byte)1 : (byte)0);
         }
     }

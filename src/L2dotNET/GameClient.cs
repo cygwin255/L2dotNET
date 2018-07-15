@@ -9,6 +9,7 @@ using L2dotNET.DataContracts;
 using L2dotNET.Encryption;
 using L2dotNET.Models.Player;
 using L2dotNET.Network;
+using L2dotNET.Network.loginauth;
 using L2dotNET.Network.serverpackets;
 using L2dotNET.Services.Contracts;
 using L2dotNET.Utility;
@@ -42,6 +43,7 @@ namespace L2dotNET
         private readonly GamePacketHandler _gamePacketHandler;
         private readonly GameCrypt _crypt;
         private readonly ICharacterService _characterService;
+        private readonly AuthThread _authThread;
 
         public GameClient(ClientManager clientManager, TcpClient tcpClient, GamePacketHandler gamePacketHandler)
         {
@@ -52,6 +54,7 @@ namespace L2dotNET
             Stream = tcpClient.GetStream();
             AccountCharacters = new List<L2Player>();
 
+            _authThread = GameServer.ServiceProvider.GetService<AuthThread>();
             _crypt = new GameCrypt();
             _characterCrudService = GameServer.ServiceProvider.GetService<ICrudService<CharacterContract>>();
             _characterService = GameServer.ServiceProvider.GetService<ICharacterService>();
@@ -94,19 +97,18 @@ namespace L2dotNET
             }
         }
 
-        public void CloseConnection()
+        private void CloseConnection()
         {
-            Log.Info("termination");
+            if (IsDisconnected)
+            {
+                return;
+            }
 
             IsDisconnected = true;
 
+            Client.Client.Disconnect(false);
             Stream.Close();
             Client.Close();
-
-            if(CurrentPlayer?.Online == 1)
-            {
-                CurrentPlayer?.SetOffline();
-            }
 
             _clientManager.Disconnect(Address.ToString());
         }
@@ -175,7 +177,26 @@ namespace L2dotNET
 
         public async Task Disconnect()
         {
-            await CurrentPlayer?.SetOffline();
+            await SendPacketAsync(new ServerClose());
+
+            if (CurrentPlayer?.Online == 1)
+            {
+                await CurrentPlayer.SendMessageAsync("Server closed the connection.");
+                await CurrentPlayer.SetOffline();
+            }
+
+            _authThread.SetInGameAccount(Account.AccountId, false);
+
+            CloseConnection();
+        }
+
+        public async Task Logout()
+        {
+            if (CurrentPlayer != null)
+            {
+                await CurrentPlayer.SetOffline();
+            }
+
             CurrentPlayer = null;
         }
 

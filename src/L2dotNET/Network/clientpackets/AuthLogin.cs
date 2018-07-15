@@ -18,12 +18,14 @@ namespace L2dotNET.Network.clientpackets
         private readonly GameClient _client;
         private readonly string _loginName;
         private readonly SessionKey _key;
+        private readonly ClientManager _clientManager;
 
         public AuthLogin(IServiceProvider serviceProvider, Packet packet, GameClient client) : base(serviceProvider)
         {
             _client = client;
             _authThread = serviceProvider.GetService<AuthThread>();
             _characterService = serviceProvider.GetService<ICharacterService>();
+            _clientManager = serviceProvider.GetService<ClientManager>();
 
             _loginName = packet.ReadString();
 
@@ -39,7 +41,7 @@ namespace L2dotNET.Network.clientpackets
         {
             if (_client.Account != null)
             {
-                _client.CloseConnection();
+                await _client.Disconnect();
                 return;
             }
 
@@ -48,7 +50,7 @@ namespace L2dotNET.Network.clientpackets
             if (accountTuple == null)
             {
                 Log.Error($"Account is not awaited. Disconnecting. Login: {_loginName}");
-                _client.CloseConnection();
+                await _client.Disconnect();
                 return;
             }
 
@@ -56,18 +58,23 @@ namespace L2dotNET.Network.clientpackets
             SessionKey accountKey = accountTuple.Item2;
             DateTime waitStarTime = accountTuple.Item3;
 
+            if (_clientManager.IsConnected(account.AccountId))
+            {
+                _clientManager.Disconnect(account.AccountId);
+            }
+
             // TODO: move 5s to config
             if ((DateTime.UtcNow - waitStarTime).TotalMilliseconds > 5000)
             {
                 Log.Error($"Account login timeout. AccountId: {account.AccountId}");
-                _client.CloseConnection();
+                await _client.Disconnect();
                 return;
             }
 
             if (accountKey != _key)
             {
                 Log.Error($"Invalid SessionKey. AccountId: {account.AccountId}");
-                _client.CloseConnection();
+                await _client.Disconnect();
                 return;
             }
 
@@ -78,8 +85,7 @@ namespace L2dotNET.Network.clientpackets
             await _client.FetchAccountCharacters();
 
             _client.SendPacketAsync(new CharList(_client, _client.SessionKey.PlayOkId1));
-            _authThread.SetInGameAccount(_client.Account.Login, true);
-
+            _authThread.SetInGameAccount(_client.Account.AccountId, true);
         }
     }
 }

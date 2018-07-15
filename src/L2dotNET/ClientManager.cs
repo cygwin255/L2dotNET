@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Sockets;
 using L2dotNET.Network;
 using L2dotNET.Services.Contracts;
@@ -58,12 +59,26 @@ namespace L2dotNET
             Log.Info($"{_loggedClients.Count} active connections");
         }
 
-        public void Disconnect(string sock)
+        public bool IsConnected(int accountId)
+        {
+            GameClient client = _loggedClients.Select(x => x.Value).FirstOrDefault(x => x.Account?.AccountId == accountId);
+
+            return client != null;
+        }
+
+        public void Disconnect(string ip)
         {
             GameClient o;
-            _loggedClients.TryRemove(sock, out o);
+            _loggedClients.TryRemove(ip, out o);
 
             Log.Info($"{_loggedClients.Count} active connections");
+        }
+
+        public void Disconnect(int accountId)
+        {
+            GameClient client = _loggedClients.Select(x => x.Value).FirstOrDefault(x => x.Account?.AccountId == accountId);
+
+            client?.Disconnect();
         }
     }
 }

@@ -37,7 +37,7 @@ namespace L2dotNET.Network.clientpackets
                 return;
             }
 
-            await _client.Disconnect();
+            await _client.Logout();
             player.SendPacketAsync(new RestartResponse());
 
             await _client.FetchAccountCharacters();

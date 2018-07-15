@@ -24,17 +24,17 @@ namespace L2dotNET.Network.clientpackets
             {
                 Log.Error($"Protocol fail {_protocol}");
                 await _client.SendPacketAsync(new KeyPacket(_client, 0));
-                _client.CloseConnection();
+                await _client.Disconnect();
                 return;
             }
 
-            if (_protocol == -1)
+            /*if (_protocol == -1)
             {
                 Log.Info($"Ping received {_protocol}");
                 await _client.SendPacketAsync(new KeyPacket(_client, 0));
-                _client.CloseConnection();
+                await _client.Disconnect();
                 return;
-            }
+            }*/
 
             Log.Info($"Accepted {_protocol} client");
 

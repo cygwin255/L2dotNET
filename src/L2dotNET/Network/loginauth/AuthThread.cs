@@ -135,9 +135,9 @@ namespace L2dotNET.Network.loginauth
             Log.Info($"Auth server successfully connected. {code}");
         }
 
-        public void SetInGameAccount(string account, bool status = false)
+        public void SetInGameAccount(int accountId, bool online)
         {
-            SendPacket(new AccountInGame(account, status));
+            SendPacket(new AccountInGame(accountId, online));
         }
 
         public void UpdatePlayersOnline()

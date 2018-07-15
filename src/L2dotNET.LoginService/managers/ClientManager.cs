@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 using L2Crypt;
@@ -126,6 +127,20 @@ namespace L2dotNET.LoginService.Managers
             }
 
             Log.Info($"Randomized {_blowfishKeys.Length} blowfish keys.");
+        }
+
+        public bool IsConnected(int accountId)
+        {
+            LoginClient client = _loggedClients.Select(x => x.Value).FirstOrDefault(x => x.ActiveAccount?.AccountId == accountId);
+
+            return client != null;
+        }
+
+        public void Disconnect(int accountId)
+        {
+            LoginClient client = _loggedClients.Select(x => x.Value).FirstOrDefault(x => x.ActiveAccount?.AccountId == accountId);
+
+            client?.Close();
         }
     }
 }

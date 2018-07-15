@@ -29,19 +29,19 @@ namespace L2dotNET.Network.clientpackets
 
             if (player.PBlockAct == 1)
             {
-                player.SendActionFailedAsync();
+                await player.SendActionFailedAsync();
                 return;
             }
 
-            if (player.isInCombat())
+            if (player.CharAttack.IsAttacking)
             {
-                player.SendSystemMessage(SystemMessageId.CantLogoutWhileFighting);
-                player.SendActionFailedAsync();
+                await player.SendSystemMessage(SystemMessageId.CantLogoutWhileFighting);
+                await player.SendActionFailedAsync();
                 return;
             }
 
-            _client.Disconnect();
-            player.SendPacketAsync(new LeaveWorld());
+            await player.SendPacketAsync(new LeaveWorld());
+            await _client.Disconnect();
         }
     }
 }

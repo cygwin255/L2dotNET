@@ -22,20 +22,20 @@ namespace L2dotNET.LoginService.Network
         public int SessionId { get; }
         public AccountContract ActiveAccount { get; set; }
 
+        public Managers.ClientManager ClientManager { get; }
+
         // Crypt
         private LoginCrypt _loginCrypt;
         public ScrambledKeyPair RsaPair;
         public byte[] BlowfishKey;
-
         private readonly PacketHandler _packetHandler;
-        private readonly Managers.ClientManager _clientManager;
         private readonly TcpClient _tcpClient;
         private readonly NetworkStream _networkStream;
 
         public LoginClient(TcpClient tcpClient, Managers.ClientManager clientManager, PacketHandler packetHandler)
         {
             _tcpClient = tcpClient;
-            _clientManager = clientManager;
+            ClientManager = clientManager;
             _packetHandler = packetHandler;
             _networkStream = tcpClient.GetStream();
             Address = tcpClient.Client.RemoteEndPoint;
@@ -48,8 +48,8 @@ namespace L2dotNET.LoginService.Network
 
         public void InitializeNetwork()
         {
-            RsaPair = _clientManager.GetScrambledKeyPair();
-            BlowfishKey = _clientManager.GetBlowfishKey();
+            RsaPair = ClientManager.GetScrambledKeyPair();
+            BlowfishKey = ClientManager.GetBlowfishKey();
 
             _loginCrypt = new LoginCrypt();
             _loginCrypt.UpdateKey(BlowfishKey);
@@ -128,7 +128,11 @@ namespace L2dotNET.LoginService.Network
 
         public void Close()
         {
-            _clientManager.RemoveClient(this);
+            _tcpClient.Client.Disconnect(false);
+            _networkStream.Close();
+            _tcpClient.Close();
+
+            ClientManager.RemoveClient(this);
         }
     }
 }

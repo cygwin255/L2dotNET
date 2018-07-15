@@ -68,7 +68,15 @@ namespace L2dotNET.LoginService.Network.OuterNetwork.RequestPackets
                     return;
                 }
 
-                if (LoginServer.ServiceProvider.GetService<ServerThreadPool>().LoggedAlready(account.AccountId))
+                if (_client.ClientManager.IsConnected(account.AccountId))
+                {
+                    _client.ClientManager.Disconnect(account.AccountId);
+                    await _client.SendAsync(LoginFail.ToPacket(LoginFailReason.ReasonAccountInUse));
+                    _client.Close();
+                    return;
+                }
+
+                if (_serverThread.LoggedAlready(account.AccountId))
                 {
                     await _client.SendAsync(LoginFail.ToPacket(LoginFailReason.ReasonAccountInUse));
                     _client.Close();
