@@ -17,43 +17,35 @@ namespace L2dotNET.Network.clientpackets
 
         public override async Task RunImpl()
         {
-            await Task.Run(() =>
+            L2Player player = _client.CurrentPlayer;
+
+            //TODO: Chair/Mount Logic
+
+            if (player.PBlockAct == 1)
             {
-                L2Player player = _client.CurrentPlayer;
+                await player.SendActionFailedAsync();
+                return;
+            }
 
-                //TODO: Chair/Mount Logic
-
-                if (player.PBlockAct == 1)
-                {
-                    player.SendActionFailedAsync();
+            //Do nothing if already attempting to sit or moving
+            switch (_standType)
+            {
+                case 0:
+                    await player.Movement.Sit();
+                    break;
+                case 1:
+                    await player.Movement.Stand();
+                    break;
+                case 2:
+                    //TODO: Fake Death
+                    break;
+                case 3:
+                    //TODO: Stop Fake Death
+                    break;
+                default:
+                    //Invalid wait type should log?
                     return;
-                }
-
-                //Do nothing if already attempting to sit or moving
-                if (!player.IsSittingInProgress() || !player.CharMovement.IsMoving)
-                {
-                    switch (_standType)
-                    {
-                        case 0:
-                            if (!player.IsSitting())
-                                player.SitAsync();
-                            break;
-                        case 1:
-                            if (player.IsSitting())
-                                player.StandAsync();
-                            break;
-                        case 2:
-                            //TODO: Fake Death
-                            break;
-                        case 3:
-                            //TODO: Stop Fake Death
-                            break;
-                        default:
-                            //Invalid wait type should log?
-                            return;
-                    }
-                }
-            });
+            }
         }
     }
 }
