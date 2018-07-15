@@ -21,14 +21,14 @@ namespace L2dotNET.Models.Npcs
         {
             Template = template;
             Name = template.Name;
-            InitializeCharacterStatus();
+            Initialize();
             this.spawn = spawn;
         }
 
         public override async Task NotifyActionAsync(L2Player player)
         {
             double dis = Calcs.CalculateDistance(player, this, true);
-            await CharMovement.MoveTo(X, Y, Z);
+            await Movement.MoveTo(X, Y, Z);
         }
 
         public override async Task OnActionAsync(L2Player player)
@@ -37,7 +37,7 @@ namespace L2dotNET.Models.Npcs
                 player.SetTargetAsync(this);
             else
             {
-                player.CharMovement.MoveTo(X, Y, Z);
+                player.Movement.MoveTo(X, Y, Z);
                 await player.SendPacketAsync(new MoveToPawn(player, this, 150));
 
                 player.ShowHtm($"warehouse/{NpcId}.htm", this);

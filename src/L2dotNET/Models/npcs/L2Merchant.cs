@@ -23,7 +23,7 @@ namespace L2dotNET.Models.Npcs
             _spawnTable = spawnTable;
             Template = template;
             Name = template.Name;
-            InitializeCharacterStatus();
+            Initialize();
             CharStatus.SetCurrentHp(MaxHp);
             CharStatus.SetCurrentMp(MaxMp);
             //Stats = new CharacterStat(this);
@@ -45,7 +45,7 @@ namespace L2dotNET.Models.Npcs
                 player.SetTargetAsync(this);
                 return;
             }
-            await player.CharMovement.MoveTo(X, Y, Z);
+            await player.Movement.MoveTo(X, Y, Z);
             await player.SendPacketAsync(new MoveToPawn(player, this, 150));
         }
 
@@ -62,7 +62,7 @@ namespace L2dotNET.Models.Npcs
             }
 
             Target = null;
-            await CharMovement.NotifyStopMove(true);
+            await Movement.NotifyStopMove(true);
 
             if (IsAttacking())
                 AbortAttack();

@@ -86,7 +86,7 @@ namespace L2dotNET.Models
 
         public virtual void UpdateAbnormalEventEffect() { }
 
-        public CharacterMovement CharMovement { get; }
+        public CharacterMovement Movement { get; protected set; }
 
         public CharacterStat CharacterStat { get; set; }
 
@@ -94,29 +94,28 @@ namespace L2dotNET.Models
 
         public override int X
         {
-            get => CharMovement.X;
-            set => CharMovement.X = value;
+            get => Movement.X;
+            set => Movement.X = value;
         }
 
         public override int Y
         {
-            get => CharMovement.Y;
-            set => CharMovement.Y = value;
+            get => Movement.Y;
+            set => Movement.Y = value;
         }
 
         public override int Z
         {
-            get => CharMovement.Z;
-            set => CharMovement.Z = value;
+            get => Movement.Z;
+            set => Movement.Z = value;
         }
 
         public L2Character(int objectId, CharTemplate template) : base(objectId)
         {
             Template = template;
             CharacterStat = new CharacterStat(this);
-            CharMovement = new CharacterMovement(this);
             CharAttack = new CharacterAttack(this);
-            InitializeCharacterStatus();
+            Initialize();
             AddFuncsToNewCharacter();
         }
 
@@ -125,9 +124,10 @@ namespace L2dotNET.Models
             return CharStatus;
         }
 
-        public virtual void InitializeCharacterStatus()
+        public virtual void Initialize()
         {
             CharStatus = new CharStatus(this);
+            Movement = new CharacterMovement(this);
         }
 
         public virtual async Task SetTargetAsync(L2Character obj)
@@ -425,7 +425,7 @@ namespace L2dotNET.Models
             }
 
             Target = null;
-            await CharMovement.NotifyStopMove(true);
+            await Movement.NotifyStopMove(true);
 
             if (IsAttacking())
                 AbortAttack();

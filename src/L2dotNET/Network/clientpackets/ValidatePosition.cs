@@ -46,7 +46,7 @@ namespace L2dotNET.Network.clientpackets
             double diffSq = Math.Sqrt(dx * dx + dy * dy);
             player.SendMessageAsync($"diff: {(int) diffSq}");
 
-            player.CharMovement.UpdatePosition(_x, _y, _z);
+            player.Movement.UpdatePosition(_x, _y, _z);
 
             if (diffSq > 600)
             {

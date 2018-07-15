@@ -65,14 +65,24 @@ namespace L2dotNET.Models.Player.General
                 return false;
             }
 
+            if (_character is L2Player)
+            {
+                L2Player player = (L2Player) _character;
+
+                if (player.Movement.IsSitting)
+                {
+                    return false;
+                }
+            }
+
             // TODO: Move to config
-            _character.SendMessageAsync($"[attack]distance to target is {(int)_character.CharMovement.DistanceTo(target)}");
-            if (_character.CharMovement.DistanceToSquared(target) > 50*50 + 10) // TODO : use Weapon range
+            _character.SendMessageAsync($"[attack]distance to target is {(int)_character.Movement.DistanceTo(target)}");
+            if (_character.Movement.DistanceToSquared(target) > 50*50 + 10) // TODO : use Weapon range
             {
                 if (moveIfTooFar)
                 {
                     _character.SendMessageAsync("[attack]targer is too far, moving for it");
-                    _character.CharMovement.MoveToAndHit(target, 50);
+                    _character.Movement.MoveToAndHit(target, 50);
                 }
 
                 return false;

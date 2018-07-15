@@ -1,4 +1,5 @@
-﻿using L2dotNET.Models.Player;
+﻿using L2dotNET.DataContracts.Shared.Enums;
+using L2dotNET.Models;
 
 namespace L2dotNET.Network.serverpackets
 {
@@ -9,18 +10,14 @@ namespace L2dotNET.Network.serverpackets
         private readonly int _x;
         private readonly int _y;
         private readonly int _z;
-        public static int Sit = 0;
-        public static int Stand = 1;
-        public static int Fake = 2;
-        public static int FakeStop = 3;
 
-        public ChangeWaitType(L2Player player, int type)
+        public ChangeWaitType(L2Object player, ChangeWaitTypeId type)
         {
             _sId = player.ObjectId;
             _x = player.X;
             _y = player.Y;
             _z = player.Z;
-            _type = type;
+            _type = (int)type;
         }
 
         public override void Write()

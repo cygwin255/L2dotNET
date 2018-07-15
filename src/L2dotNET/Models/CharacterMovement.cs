@@ -4,12 +4,13 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using L2dotNET.Models.Player;
 using L2dotNET.Network.serverpackets;
 using L2dotNET.Utility;
 
 namespace L2dotNET.Models
 {
-    public abstract class MovementBase
+    public class CharacterMovement
     {
         public int X
         {
@@ -56,13 +57,13 @@ namespace L2dotNET.Models
         public int DestinationZ { get; private set; }
         public int DestinationRadiusOffset { get; private set; }
 
-        protected readonly L2Character _character;
+        protected virtual L2Character _character { get; }
         protected long _movementLastTime;
         protected L2Character _attackTarget;
         protected int _x;
         protected int _y;
 
-        protected MovementBase(L2Character character)
+        public CharacterMovement(L2Character character)
         {
             _character = character;
             _attackTarget = null;
@@ -178,7 +179,7 @@ namespace L2dotNET.Models
         {
             if (!CanMove())
             {
-                _character.SendActionFailedAsync();
+                await _character.SendActionFailedAsync();
                 return;
             }
 
@@ -204,7 +205,7 @@ namespace L2dotNET.Models
             // TODO: move to config. 10 is an allowable error - no movement needed if dist less then that value.
             if (distance > 9900 || distance <= radiusOffset || distance < 10)
             {
-                _character.SendActionFailedAsync();
+                await _character.SendActionFailedAsync();
                 return;
             }
 

@@ -36,6 +36,8 @@ namespace L2dotNET.Models.Player
 
         public new PlayerStatus CharStatus => (PlayerStatus) base.CharStatus;
 
+        public new PlayerMovement Movement => (PlayerMovement) base.Movement;
+
         public AccountContract Account { get; set; }
         public GameClient Gameclient { get; private set; }
 
@@ -189,7 +191,7 @@ namespace L2dotNET.Models.Player
             _characterService = GameServer.ServiceProvider.GetService<ICharacterService>();
             CharacterStat = new CharacterStat(this);
             AddFuncsToNewCharacter();
-            InitializeCharacterStatus();
+            Initialize();
 
             Inventory = new PcInventory(this);
             Title = string.Empty;
@@ -240,9 +242,10 @@ namespace L2dotNET.Models.Player
             _characterService = characterService;
         }
 
-        public override void InitializeCharacterStatus()
+        public override void Initialize()
         {
             base.CharStatus = new PlayerStatus(this);
+            base.Movement = new PlayerMovement(this);
         }
 
         public byte PrivateStoreType = 0;
@@ -402,19 +405,6 @@ namespace L2dotNET.Models.Player
             su.Add(StatusUpdate.Level, Level);
             SendPacketAsync(su);
         }
-
-        /*public void Timer()
-        {
-            _timerTooFar = new Timer(30 * 1000);
-            _timerTooFar.Elapsed += _timeToFarTimerTask;
-            _timerTooFar.Interval = 10000;
-            _timerTooFar.Enabled = true;
-        }*/
-
-       /* public void _timeToFarTimerTask(object sender, ElapsedEventArgs e)
-        {
-            ValidateVisibleObjects(X, Y, true);
-        }*/
         
         public bool IsAlikeDead()
         {
@@ -592,10 +582,10 @@ namespace L2dotNET.Models.Player
 
             Party?.Leave(this);
 
-            if (CharMovement.IsMoving)
+            if (Movement.IsMoving)
             {
-                CharMovement.UpdatePosition();
-                CharMovement.NotifyStopMove();
+                Movement.UpdatePosition();
+                Movement.NotifyStopMove();
             }
 
             await _characterService.UpdatePlayer(this);
@@ -912,7 +902,7 @@ namespace L2dotNET.Models.Player
             if (dis < 151)
                 target.NotifyActionAsync(this);
             else
-                CharMovement.MoveTo(target.X, target.Y, target.Z);
+                Movement.MoveTo(target.X, target.Y, target.Z);
 
             SendActionFailedAsync();
         }
@@ -1004,50 +994,6 @@ namespace L2dotNET.Models.Player
             }
 
             return chars.ToArray();
-        }
-
-        public bool IsSittingInProgress()
-        {
-            return (_sitTime != null) && _sitTime.Enabled;
-        }
-
-        public bool IsSitting()
-        {
-            return _isSitting;
-        }
-
-        public async Task SitAsync()
-        {
-            if (_sitTime == null)
-            {
-                _sitTime = new Timer
-                {
-                    Interval = 2500
-                };
-                _sitTime.Elapsed += SitEnd;
-            }
-
-            _sitTime.Enabled = true;
-            await BroadcastPacketAsync(new ChangeWaitType(this, ChangeWaitType.Sit));
-        }
-
-        public async Task StandAsync()
-        {
-            _sitTime.Enabled = true;
-            await BroadcastPacketAsync(new ChangeWaitType(this, ChangeWaitType.Stand));
-            //TODO stop relax effect
-        }
-
-        private void SitEnd(object sender, ElapsedEventArgs e)
-        {
-            _sitTime.Enabled = false;
-            _isSitting = !_isSitting;
-
-            if (_isSitting || (_chair == null))
-                return;
-
-            _chair.IsUsedAlready = false;
-            _chair = null;
         }
 
         public void SetChair(L2Chair chairObj)

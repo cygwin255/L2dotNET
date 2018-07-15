@@ -100,7 +100,7 @@ namespace L2dotNET.Network.serverpackets
 
             WriteInt(0);
 
-            WriteByte(_player.IsSitting() ? 0 : 1); // standing = 1  sitting = 0
+            WriteByte(_player.Movement.IsSitting ? 0 : 1); // standing = 1  sitting = 0
             WriteByte(_player.IsRunning);
             WriteByte(_player.isInCombat() ? 1 : 0);
             WriteByte(_player.IsAlikeDead() ? 1 : 0); //if (_activeChar.isInOlympiadMode()) 0 TODO

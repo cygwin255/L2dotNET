@@ -18,7 +18,7 @@ namespace L2dotNET.Models.Npcs
         {
             Template = template;
             Name = template.Name;
-            InitializeCharacterStatus();
+            Initialize();
             CharStatus.SetCurrentHp(MaxHp);
             CharStatus.SetCurrentMp(MaxMp);
             //Stats = new CharacterStat(this);
@@ -40,7 +40,7 @@ namespace L2dotNET.Models.Npcs
                 player.SetTargetAsync(this);
                 return;
             }
-            player.CharMovement.MoveTo(X, Y, Z);
+            player.Movement.MoveTo(X, Y, Z);
             await player.SendPacketAsync(new MoveToPawn(player, this, 150));
 
             player.ShowHtm($"trainer/{NpcId}.htm",this);

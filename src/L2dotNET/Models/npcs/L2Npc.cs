@@ -22,7 +22,7 @@ namespace L2dotNET.Models.Npcs
         {
             Template = template;
             Name = Template.Name;
-            InitializeCharacterStatus();
+            Initialize();
             CharStatus.SetCurrentHp(MaxHp);
             CharStatus.SetCurrentMp(MaxMp);
             this.spawn = spawn;
@@ -50,7 +50,7 @@ namespace L2dotNET.Models.Npcs
         public override async Task NotifyActionAsync(L2Player player)
         {
             double dis = Calcs.CalculateDistance(player, this, true);
-            await CharMovement.MoveTo(X, Y, Z);
+            await Movement.MoveTo(X, Y, Z);
         }
 
         public int NpcId => Template.NpcId;
@@ -73,7 +73,7 @@ namespace L2dotNET.Models.Npcs
                 player.SetTargetAsync(this);
             else
             {
-                await player.CharMovement.MoveTo(X, Y, Z);
+                await player.Movement.MoveTo(X, Y, Z);
                 await player.SendPacketAsync(new MoveToPawn(player, this, 150));
                 if (Template.Type == "L2Monster")
                 {
@@ -91,7 +91,7 @@ namespace L2dotNET.Models.Npcs
                 player.SetTargetAsync(this);
                 return;
             }
-            await player.CharMovement.MoveTo(X, Y, Z);
+            await player.Movement.MoveTo(X, Y, Z);
             await player.SendPacketAsync(new MoveToPawn(player, this, 150));
 
             await ShowNPCInfoAsync(player);
@@ -209,7 +209,7 @@ namespace L2dotNET.Models.Npcs
                 return;
             }
 
-            await player.CharMovement.MoveTo(X, Y, Z);
+            await player.Movement.MoveTo(X, Y, Z);
             await player.SendPacketAsync(new MoveToPawn(player, this, 150));
         }
 
@@ -321,7 +321,7 @@ namespace L2dotNET.Models.Npcs
             html.Replace("%wit%", Wit);
             html.Replace("%men%", Men);
             html.Replace("%loc%", $"{X} {Y} {Z}");
-            html.Replace("%dist%", player.CharMovement.DistanceToSquared(X,Y));
+            html.Replace("%dist%", player.Movement.DistanceToSquared(X,Y));
             //         // byte attackAttribute = ((L2Character)this).getAttackElement();
             //         html.replace("%ele_atk_value%", "%todo%" /* String.valueOf(((L2Character)this).getAttackElementValue(attackAttribute)) */);
             //         html.replace("%ele_dfire%", String.valueOf(((L2Character)this).getDefenseElementValue((byte)2)));
@@ -334,7 +334,7 @@ namespace L2dotNET.Models.Npcs
             if (spawn != null)
             {
                 html.Replace("%spawn%", $"{spawn.Location.X} {spawn.Location.Y} {spawn.Location.Z}");
-                html.Replace("%loc2d%", player.CharMovement.DistanceToSquared(spawn.Location.Y,spawn.Location.X));
+                html.Replace("%loc2d%", player.Movement.DistanceToSquared(spawn.Location.Y,spawn.Location.X));
                 html.Replace("%loc3d%", "<font color=FF0000>--</font>");
                 //html.Replace("%loc3d%", player.getDistanceSq(spawn.Location.X,spawn.Location.Y,spawn.Location.Z); -Not implemented
                 html.Replace("%resp%", spawn.Location.RespawnDelay / 1000);

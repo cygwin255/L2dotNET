@@ -19,9 +19,9 @@ namespace L2dotNET.Network.serverpackets
 
             WriteInt(_character.ObjectId);
 
-            WriteInt(_character.CharMovement.DestinationX);
-            WriteInt(_character.CharMovement.DestinationY);
-            WriteInt(_character.CharMovement.DestinationZ);
+            WriteInt(_character.Movement.DestinationX);
+            WriteInt(_character.Movement.DestinationY);
+            WriteInt(_character.Movement.DestinationZ);
 
             WriteInt(_character.X);
             WriteInt(_character.Y);

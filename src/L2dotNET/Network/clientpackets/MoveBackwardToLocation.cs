@@ -40,10 +40,10 @@ namespace L2dotNET.Network.clientpackets
         {
             L2Player player = _client.CurrentPlayer;
 
-            if (player.IsSittingInProgress() || player.IsSitting())
+            if (player.Movement.IsSitting)
             {
-                player.SendSystemMessage(SystemMessageId.CantMoveSitting);
-                player.SendActionFailedAsync();
+                await player.SendSystemMessage(SystemMessageId.CantMoveSitting);
+                await player.SendActionFailedAsync();
                 return;
             }
 
@@ -54,7 +54,7 @@ namespace L2dotNET.Network.clientpackets
                 return;
             }
 
-            if (!player.CharMovement.CanMove())
+            if (!player.Movement.CanMove())
             {
                 player.SendActionFailedAsync();
                 return;
@@ -66,7 +66,7 @@ namespace L2dotNET.Network.clientpackets
 
             //player.SendMessageAsync($"distance {Math.Floor(Math.Sqrt(dx * dx + dy * dy))}");
             //player.AiCharacter.StopAutoAttack();
-            player.CharMovement.MoveTo(_targetX, _targetY, _targetZ);
+            await player.Movement.MoveTo(_targetX, _targetY, _targetZ);
         }
     }
 }
