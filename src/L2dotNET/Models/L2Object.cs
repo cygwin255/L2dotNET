@@ -21,7 +21,7 @@ namespace L2dotNET.Models
     {
         private static readonly Logger Log = LogManager.GetCurrentClassLogger();
         public int ObjectId;
-        //public SortedList<int, L2Object> KnownObjects = new SortedList<int, L2Object>();
+
         public virtual byte Level { get; set; } = 1;
         public virtual bool Dead { get; set; } = false;
         public virtual int X { get; set; }
@@ -85,81 +85,10 @@ namespace L2dotNET.Models
             await Region.BroadcastToNeighbours(p => p.SendPacketAsync(pk), excludeYourself ? (int?)ObjectId : null);
         }
 
-        //public virtual void ReduceHp(L2Character attacker, double damage) { }
-
         public virtual void DecayMe()
         {
             L2World.RemoveObject(this);
         }
-
-       /* public async Task ClearKnownsAsync(bool deleteMe, params int[] exclude)
-        {
-            foreach (L2Object o in KnownObjects.Values)
-            {
-                await o.OnClearingAsync(this, deleteMe);
-
-                if (deleteMe && this is L2Player)
-                    await SendPacketAsync(new DeleteObject(o.ObjectId));
-            }
-
-            KnownObjects.Clear();
-        }*/
-
-        /*public virtual void SetRegion(L2WorldRegion newRegion)
-        {
-            List<L2WorldRegion> oldAreas = new List<L2WorldRegion>();
-
-            if (Region != null)
-            {
-                Region.Remove(this);
-                oldAreas = Region.GetSurroundingRegions();
-            }
-
-            List<L2WorldRegion> newAreas = new List<L2WorldRegion>();
-
-            if (newRegion != null)
-            {
-                newRegion.Add(this);
-                newAreas = newRegion.GetSurroundingRegions();
-            }
-
-            foreach (L2WorldRegion region in oldAreas.Where(region => !newAreas.Contains(region)))
-            {
-                foreach (L2Object obj in region.GetObjects().Where(obj => obj != this))
-                {
-                    obj.RemoveKnownObject(this);
-                    RemoveKnownObject(obj);
-                }
-
-                if (this is L2Player && region.IsEmptyNeighborhood())
-                    region.SetActive(false);
-            }
-
-            foreach (L2WorldRegion region in newAreas.Where(region => !oldAreas.Contains(region)))
-            {
-                // Update all objects.
-                foreach (L2Object obj in region.GetObjects().Where(obj => obj != this))
-                {
-                    obj.AddKnownObject(this);
-                    AddKnownObject(obj);
-                }
-
-                // Activate the new neighbor region.
-                if (this is L2Player)
-                    region.SetActive(true);
-            }
-
-            Region = newRegion;
-        }*/
-
-        /*private async Task OnClearingAsync(L2Object target, bool deleteMe)
-        {
-            lock (KnownObjects)
-                KnownObjects.Remove(target.ObjectId);
-
-            if (deleteMe && target is L2Player)
-                await target.SendPacketAsync(new DeleteObject(ObjectId));
-        }*/
 
         public async Task SetVisible(bool val)
         {
@@ -167,54 +96,6 @@ namespace L2dotNET.Models
           //  foreach (L2Object o in KnownObjects.Values)
           //      await o.CanViewAsync(this);
         }
-
-        /*private async Task CanViewAsync(L2Object target)
-        {
-            foreach (L2Object o in KnownObjects.Values)
-                await o.OnClearingAsync(this, true);
-        }*/
-
-        /*public void AddKnownObject(L2Object obj, GameserverPacket pk, bool pkuse)
-        {
-            if (KnownObjects.ContainsKey(obj.ObjectId))
-                return;
-
-            KnownObjects.Add(obj.ObjectId, obj);
-
-            if (!obj.Visible)
-                return;
-
-            if (pkuse)
-                OnAddObject(obj, pk);
-        }*/
-
-        /*public void UpdateVisibleStatus()
-        {
-            foreach (L2Object o in KnownObjects.Values.Where(o => o.Visible))
-                OnAddObject(o, null);
-        }*/
-
-        /*public void RemoveKnownObject(L2Object obj, bool update)
-        {
-            if (!KnownObjects.ContainsKey(obj.ObjectId))
-                return;
-
-            OnRemObject(obj);
-
-            lock (KnownObjects)
-                KnownObjects.Remove(obj.ObjectId);
-        }*/
-
-       /* public void Revalidate(L2Object obj)
-        {
-            if (KnownObjects.ContainsKey(obj.ObjectId))
-                return;
-
-            KnownObjects.Add(obj.ObjectId, obj);
-
-            if (obj.Visible)
-                OnAddObject(obj, null);
-        }*/
 
         public bool IsInsideRadius(L2Object o, int radius, bool checkZ, bool strictCheck)
         {
@@ -506,20 +387,6 @@ namespace L2dotNET.Models
                 await ((L2Player)this).WaterTimer();
             }
         }
-
-       /* public void ValidateVisibleObjects(int x, int y, bool zones)
-        {
-            //int range = 4000;
-            //int height = 1600;
-
-            if (IsInSiege())
-            {
-                //range = 2600;
-                //height = 1000;
-            }
-
-            //L2World.CheckToUpdate(this, x, y, range, height, true, zones);
-        }*/
 
         public Timer RegenerationMethod_1S,
                      RegenUpdate;
