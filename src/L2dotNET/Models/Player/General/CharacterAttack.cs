@@ -187,13 +187,13 @@ namespace L2dotNET.Models.Player.General
             return new Hit(_target.ObjectId, damage, isMiss, isCritical, shield, false, 0);
         }
 
-        public void StartAutoAttack()
+        public async void StartAutoAttack()
         {
             if (_character is L2Player)
             {
                 if (!IsInAttackStance)
                 {
-                    _character.SendPacketAsync(new AutoAttackStart(_character.ObjectId));
+                    await _character.BroadcastPacketAsync(new AutoAttackStart(_character.ObjectId));
                 }
 
                 AttackStanceManager.SetAttackStance((L2Player) _character);
@@ -201,11 +201,11 @@ namespace L2dotNET.Models.Player.General
             }
         }
 
-        public void StopAutoAttack()
+        public async void StopAutoAttack()
         {
             if (IsInAttackStance && _character is L2Player)
             {
-                _character.SendPacketAsync(new AutoAttackStop(_character.ObjectId));
+                await _character.BroadcastPacketAsync(new AutoAttackStop(_character.ObjectId));
                 IsInAttackStance = false;
             }
         }
